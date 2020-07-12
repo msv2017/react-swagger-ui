@@ -63,25 +63,23 @@ function Parameters({ verb, path, parameters }) {
                     <p className="text-muted">Parameters:</p>
                 </Col>
             </Row>
-            {parameters.map((x, i) =>
-                <Row key={i}>
-                    <ParameterContext.Provider value={{ register, data: x }}>
-                        <Col>
-                            <ParameterInfo />
-                        </Col>
-                        <Col>
-                            {x.description}
-                            <ParameterContainer />
-                        </Col>
-                    </ParameterContext.Provider>
-                </Row>)
-            }
+            <Row>
+                <Col>
+                    <Form validated>
+                        {parameters.map((data, i) =>
+                            <ParameterContext.Provider key={i} value={{ register, data }}>
+                                <ParameterContainer />
+                            </ParameterContext.Provider>
+                        )}
+                    </Form>
+                </Col>
+            </Row>
             <Row>
                 <Col>
                     <ExecuteRequest {...{ verb, path, values }} />
                 </Col>
             </Row>
-        </Container>
+        </Container >
     );
 }
 
@@ -180,61 +178,79 @@ function ResponseMarkdown({ text }) {
 
 function ParameterBody() {
     const ref = useRef();
-    const { register, data, data: { name, schema } } = useContext(ParameterContext);
+    const { register, data, data: { name, schema, required } } = useContext(ParameterContext);
     register(data, () => ref.current.value);
     const json = parameterToJson(name, schema);
     const text = JSON.stringify(json, null, 2);
     const rows = text.match(/$/mg).length;
 
     return (
-        <Form>
-            <Form.Group>
-                <Form.Control ref={ref} as="textarea" rows={rows} defaultValue={text} />
-            </Form.Group>
-        </Form>);
+        <Form.Group>
+            <Form.Label>{data.description}</Form.Label>
+            <Form.Control ref={ref} as="textarea" rows={rows} defaultValue={text} required={required} />
+        </Form.Group>);
 }
 
 function Parameter() {
     const ref = useRef();
-    const { register, data } = useContext(ParameterContext);
+    const { register, data, data: { description, required } } = useContext(ParameterContext);
     register(data, () => ref.current.value);
-    return (<Form.Control ref={ref} placeholder="value" />);
+    return (
+        <Form.Group>
+            <Form.Label>{description}</Form.Label>
+            <Form.Control ref={ref} placeholder="value" required={required} />
+        </Form.Group>
+    );
 }
 
 function ParameterContainer() {
     const { data: { schema, type } } = useContext(ParameterContext);
     return (
-        schema
-            ? <ParameterBody />
-            : type === 'file'
-                ? <ParameterFile />
-                : <Parameter />);
+        <Form.Row>
+            <Col>
+                <ParameterInfo />
+            </Col>
+            <Col>
+                {schema
+                    ? <ParameterBody />
+                    : type === 'file'
+                        ? <ParameterFile />
+                        : <Parameter />}
+            </Col>
+        </Form.Row>);
 }
 
 function ParameterFile() {
     const ref = useRef();
-    const { register, data } = useContext(ParameterContext);
+    const { register, data, data: { description, required } } = useContext(ParameterContext);
     register(data, () => ref.current.files[0]);
-    return (<Form.File ref={ref} placeholder="file" />);
+    return (
+        <Form.Group>
+            <Form.Label>{description}</Form.Label>
+            <Form.File ref={ref} placeholder="file" required={required} />
+        </Form.Group>
+    );
 }
 
 function ParameterInfo() {
     const { data, data: { name, type, format, required } } = useContext(ParameterContext);
     return (
-        <div className="parameter">
-            <div>
-                <b>{name}</b>
-                {required &&
-                    <sup>
-                        <code>* required</code>
-                    </sup>}
+        <Form.Group>
+            <div className="parameter">
+                <div>
+                    <b>{name}</b>
+                    {required &&
+                        <sup>
+                            <code>* required</code>
+                        </sup>}
+                </div>
+                <div>
+                    {format ? `${type} (${format})` : type}
+                </div>
+                <div>
+                    <i className="text-muted">({data.in})</i>
+                </div>
             </div>
-            <div>
-                {format ? `${type} (${format})` : type}
-            </div>
-            <div>
-                <i className="text-muted">({data.in})</i>
-            </div>
-        </div>
+        </Form.Group>
     );
 }
