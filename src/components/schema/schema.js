@@ -1,9 +1,11 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Badge, Container, Row, Col } from 'react-bootstrap';
+import { useRecoilState } from 'recoil';
+import { Badge, Container, Row, Col, ButtonGroup, DropdownButton, Dropdown, Form } from 'react-bootstrap';
 import ExpandableCard from '../expandable-card/expandable-card';
 import Endpoint from '../endpoint/endpoint';
-import { getEndpoints, getSections } from '../../utils';
+import { getSections } from '../../utils';
+import atoms from '../atoms';
 
 import './schema.css';
 
@@ -18,6 +20,8 @@ function Schema(
             }
         }
     }) {
+
+    const [protocol, setProtocol] = useRecoilState(atoms.protocolState);
 
     const sections = getSections(schema);
 
@@ -34,6 +38,21 @@ function Schema(
                         <ReactMarkdown>
                             {description}
                         </ReactMarkdown>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Form>
+                            <Form.Group>
+                                <DropdownButton
+                                    as={ButtonGroup}
+                                    variant="outline-primary"
+                                    title={`Schema: ${protocol.toUpperCase()}`}>
+                                    <Dropdown.Item eventKey="1" onSelect={() => setProtocol('http')}>HTTP</Dropdown.Item>
+                                    <Dropdown.Item eventKey="2" onSelect={() => setProtocol('https')}>HTTPS</Dropdown.Item>
+                                </DropdownButton>
+                            </Form.Group>
+                        </Form>
                     </Col>
                 </Row>
                 <Row>

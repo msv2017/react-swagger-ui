@@ -53,8 +53,10 @@ async function executeRequest(baseUrl, verb, path, values) {
 }
 
 function Parameters({ verb, path, parameters }) {
-    var values = [];
-    var register = (data, getValue) => values.push({ data, getValue });
+    const values = [];
+    const register = (data, getValue) => values.push({ data, getValue });
+
+    const protocol = useRecoilValue(atoms.protocolState);
 
     return (
         <Container fluid>
@@ -76,7 +78,7 @@ function Parameters({ verb, path, parameters }) {
             </Row>
             <Row>
                 <Col>
-                    <ExecuteRequest {...{ verb, path, values }} />
+                    <ExecuteRequest {...{ protocol, verb, path, values }} />
                 </Col>
             </Row>
         </Container >
@@ -85,11 +87,11 @@ function Parameters({ verb, path, parameters }) {
 
 export default Parameters;
 
-function ExecuteRequest({ verb, path, values }) {
+function ExecuteRequest({ protocol, verb, path, values }) {
     const schema = useRecoilValue(atoms.schemaState);
     const [response, setResponse] = useState(null);
     const [isExecuting, setIsExecuting] = useState(false);
-    const baseUrl = `https://${schema.host}${schema.basePath}`;
+    const baseUrl = `${protocol}://${schema.host}${schema.basePath}`;
 
     return (
         <>
@@ -203,21 +205,41 @@ function Parameter() {
     );
 }
 
+// type=['integer','string','file']
+// data.type === undefined, then data.schema.type
+function renderParameter(data) {
+    switch (data.type || data.schema.type) {
+        case 'object': return <ParameterBody />;
+        case 'file': return <ParameterFile />;
+        default: return data.items && data.items.enum ? <ParameterEnum /> : <Parameter />;
+    }
+}
+
 function ParameterContainer() {
-    const { data: { schema, type } } = useContext(ParameterContext);
+    const { data } = useContext(ParameterContext);
     return (
         <Form.Row>
             <Col>
                 <ParameterInfo />
             </Col>
             <Col>
-                {schema
-                    ? <ParameterBody />
-                    : type === 'file'
-                        ? <ParameterFile />
-                        : <Parameter />}
+                {renderParameter(data)}
             </Col>
         </Form.Row>);
+}
+
+function ParameterEnum() {
+    const ref = useRef();
+    const { register, data, data: { collectionFormat, description, required } } = useContext(ParameterContext);
+    register(data, () => Array.from(ref.current.selectedOptions, x => x.value));
+    return (
+        <Form.Group>
+            <Form.Label>{description}</Form.Label>
+            <Form.Control ref={ref} as="select" required={required} multiple={collectionFormat === 'multi'}>
+                {data.items.enum.map((x, i) => <option key={i}>{x}</option>)}
+            </Form.Control>
+        </Form.Group>
+    );
 }
 
 function ParameterFile() {

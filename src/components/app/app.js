@@ -57,8 +57,7 @@ function App() {
                   disabled={isLoading}
                   onClick={() => setSchemaUrl(schemaUrlRef.current.value)}
                 >
-                  {isLoading && <Spinner animation="border" size="sm" />}
-                  {!isLoading && "Explore"}
+                  {isLoading ? <Spinner animation="border" size="sm" /> : 'Explore'}
                 </Button>
               </InputGroup.Append>
             </InputGroup>
