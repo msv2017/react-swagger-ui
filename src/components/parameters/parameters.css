@@ -1,0 +1,16 @@
+.parameter {
+    padding-bottom: 1em;
+}
+
+.copy-button {
+    position: absolute;
+    top: 100%;
+    left: 100%;
+    transform: translate(-4.5em, -3.8em);
+}
+
+.force-height {
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+}
