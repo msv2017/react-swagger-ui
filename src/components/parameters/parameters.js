@@ -205,8 +205,6 @@ function Parameter() {
     );
 }
 
-// type=['integer','string','file']
-// data.type === undefined, then data.schema.type
 function renderParameter(data) {
     switch (data.type || data.schema.type) {
         case 'object': return <ParameterBody />;
