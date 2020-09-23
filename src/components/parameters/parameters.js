@@ -1,5 +1,5 @@
 import React, { useRef, useState, useContext } from 'react';
-import { Container, Row, Col, Form, Button, Spinner, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Spinner, Modal, Tabs, Tab } from 'react-bootstrap';
 import { useRecoilValue } from 'recoil';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -16,7 +16,9 @@ async function executeRequest(baseUrl, verb, path, values) {
 
     const request = {
         method: verb,
-        headers: { 'accept': 'application/json' }
+        headers: {
+            'accept': 'application/json'
+        }
     };
 
     for (var p of values.filter(x => x.data.in === 'path')) {
@@ -48,8 +50,15 @@ async function executeRequest(baseUrl, verb, path, values) {
 
     const response = await fetch(url, request);
     const json = await response.json();
+    const text = JSON.stringify(json, null, 2);
 
-    return json;
+    const headers = {};
+
+    for (const kvp of response.headers) {
+        headers[kvp[0]] = kvp[1];
+    }
+
+    return { json, text, headers };
 }
 
 function Parameters({ verb, path, parameters }) {
@@ -100,8 +109,8 @@ function ExecuteRequest({ protocol, verb, path, values }) {
                     async () => {
                         setIsExecuting(true);
                         try {
-                            const json = await executeRequest(baseUrl, verb, path, values);
-                            setResponse(JSON.stringify(json, null, 2));
+                            const response = await executeRequest(baseUrl, verb, path, values);
+                            setResponse(response);
                         } catch (err) {
                         } finally {
                             setIsExecuting(false);
@@ -113,11 +122,15 @@ function ExecuteRequest({ protocol, verb, path, values }) {
             </Button>
             {response &&
                 <>
-                    <span className="d-block pt-3 text-muted">
-                        Response:
-                    </span>
-                    <CopyModal text={response} />
-                    <ResponseMarkdown text={'```json\n' + response + '\n```'} />
+                    <Tabs defaultActiveKey="response-body">
+                        <Tab eventKey="response-body" title="Response body">
+                            <CopyModal text={response.text} />
+                            <ResponseMarkdown text={'```json\n' + response.text + '\n```'} />
+                        </Tab>
+                        <Tab eventKey="response-headers" title="Response headers">
+                            {JSON.stringify(response.headers, null, 2)}
+                        </Tab>
+                    </Tabs>
                 </>
             }
         </>);

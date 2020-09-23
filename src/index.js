@@ -7,13 +7,6 @@ import * as serviceWorker from './serviceWorker';
 
 import './index.css';
 
-// ReactDOM.render(
-//   <React.StrictMode>
-//     <App />
-//   </React.StrictMode>,
-//   document.getElementById('root')
-// );
-
 ReactDOM.render(
   <RecoilRoot>
     <App />
